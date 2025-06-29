@@ -1,0 +1,625 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% if current_user.role != 'admin' %}
+  <div class="alert alert-danger mt-4">⚠️ You do not have access to this page.</div>
+{% else %}
+
+<style>
+/* Prevent horizontal scroll globally */
+html, body {
+  overflow-x: hidden;
+}
+
+.container {
+  max-width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+/* Summary Cards */
+.summary-card {
+  background-color: #3a2c2c;
+  border: 1px solid #7b3f00;
+  border-radius: 10px;
+  transition: transform 0.3s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.summary-card h5 {
+  color: #eee;
+  font-weight: 500;
+}
+
+.summary-card h2 {
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Tab styling */
+.nav-tabs {
+  margin-bottom: 0;
+  border-bottom: none;
+  background-color: transparent;
+}
+
+.nav-tabs .nav-link {
+  border: 1px solid #7b3f00;
+  background-color: #4a2e2e;
+  color: #eee;
+  margin-right: 5px;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link:hover {
+  background-color: #5a3e3e;
+  color: #fff;
+}
+
+.nav-tabs .nav-link.active {
+  background-color: #b22222;
+  color: #fff;
+  border-bottom: 1px solid transparent;
+  z-index: 2;
+  position: relative;
+}
+
+.tab-content {
+  margin-top: 0;
+  background-color: #2c1f1f;
+  padding: 20px;
+  border: 1px solid #7b3f00;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  position: relative;
+  z-index: 1;
+  overflow-x: hidden;
+}
+
+/* Tunnel badge styling */
+.tunnel-badge {
+  font-family: monospace;
+  background-color: #3a2c2c;
+  color: #f8f9fa;
+  padding: 3px 6px;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+/* Action buttons */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Accordion styling - fixed colors */
+.accordion {
+  --bs-accordion-bg: #2c1f1f;
+  --bs-accordion-border-color: #7b3f00;
+  --bs-accordion-btn-color: #f8f9fa;
+  --bs-accordion-btn-bg: #3a2c2c;
+  --bs-accordion-active-color: #fff;
+  --bs-accordion-active-bg: rgba(178, 34, 34, 0.2);
+  --bs-accordion-btn-focus-box-shadow: 0 0 0 0.25rem rgba(178, 34, 34, 0.25);
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: rgba(178, 34, 34, 0.2);
+  color: #fff;
+}
+
+.accordion-button:hover {
+  background-color: #4a3a3a;
+}
+
+.accordion-item {
+  background-color: #2c1f1f;
+  border: 1px solid #7b3f00;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.accordion-header button {
+  color: #f8f9fa;
+}
+
+.accordion-body {
+  background-color: #2c1f1f;
+  color: #eee;
+  overflow: hidden;
+}
+
+/* Tunnel details */
+.tunnel-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.tunnel-item {
+  background-color: #3a2c2c;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 3px solid #b22222;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.tunnel-item:hover {
+  background-color: #4a3a3a;
+}
+
+.tunnel-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.tunnel-arrow {
+  color: #b22222;
+  font-weight: bold;
+}
+
+/* Input group styling */
+.input-group {
+  max-width: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.input-group .form-control {
+  background-color: #3a2c2c;
+  color: #eee;
+  border-color: #7b3f00;
+}
+
+.input-group .btn {
+  background-color: #4a2e2e;
+  color: #eee;
+  border-color: #7b3f00;
+}
+
+.input-group .btn:hover {
+  background-color: #5a3e3e;
+}
+
+/* Table styling */
+.custom-table {
+  width: 100%;
+  table-layout: auto;
+  color: #eee;
+}
+
+.custom-table th {
+  background-color: #4a2e2e;
+  border-color: #7b3f00;
+}
+
+.custom-table td {
+  background-color: #3a2c2c;
+  border-color: #7b3f00;
+}
+
+.custom-table th, 
+.custom-table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* Installer code */
+.installer-code {
+  max-width: 180px;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+  color: #eee;
+  background-color: #3a2c2c;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #7b3f00;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .custom-table th, 
+  .custom-table td {
+    max-width: 150px;
+  }
+  
+  .installer-code {
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 768px) {
+  .action-buttons {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .custom-table th, 
+  .custom-table td {
+    max-width: 120px;
+  }
+  
+  .installer-code {
+    max-width: 100px;
+  }
+}
+
+/* Fix for white backgrounds */
+*:focus, *:active, *:hover {
+  outline: none;
+}
+
+.btn-check:focus + .btn, .btn:focus {
+  box-shadow: none;
+}
+
+/* No data message */
+.alert-secondary {
+  background-color: #3a2c2c;
+  border-color: #7b3f00;
+  color: #eee;
+}
+
+/* Scrollbar */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+</style>
+
+<div class="container py-4">
+  <h2 class="mb-4 text-white">Admin Panel</h2>
+
+  <!-- Summary Cards -->
+  <div class="row mb-4 g-4">
+    <div class="col-md-4">
+      <div class="summary-card h-100 p-3 text-center">
+        <h5><i class="bi bi-people-fill"></i> Total Users</h5>
+        <h2 class="display-6">{{ users|length }}</h2>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="summary-card h-100 p-3 text-center">
+        <h5><i class="bi bi-laptop"></i> Total Clients</h5>
+        <h2 class="display-6">{{ clients|length }}</h2>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="summary-card h-100 p-3 text-center">
+        <h5><i class="bi bi-plug"></i> Total Tunnels</h5>
+        <h2 class="display-6">{{ clients | map(attribute='frpc_config') | map('length') | sum }}</h2>
+      </div>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs" id="adminTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+        <i class="bi bi-person-circle"></i> Users
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="clients-tab" data-bs-toggle="tab" data-bs-target="#clients" type="button" role="tab">
+        <i class="bi bi-laptop"></i> Clients
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tunnels-tab" data-bs-toggle="tab" data-bs-target="#tunnels" type="button" role="tab">
+        <i class="bi bi-plug"></i> Tunnels
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="adminTabContent">
+    <!-- USERS TAB -->
+    <div class="tab-pane fade show active" id="users" role="tabpanel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="text-white">User Management</h4>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal">
+          <i class="bi bi-plus-lg"></i> Add User
+        </button>
+      </div>
+      <div class="table-responsive">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Email Verified</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+            <tr>
+              <td>{{ u.username }}</td>
+              <td>{{ u.email or '-' }}</td>
+              <td>
+                <span class="badge {% if u.role == 'admin' %}bg-danger{% else %}bg-secondary{% endif %}">
+                  {{ u.role }}
+                </span>
+              </td>
+              <td>
+                {% if u.email_verified %}
+                  <span class="badge bg-success">Yes</span>
+                {% else %}
+                  <span class="badge bg-secondary">No</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if u.id != current_user.id %}
+                <div class="action-buttons">
+                  <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editUserModal{{ u.id }}">
+                    <i class="bi bi-pencil"></i> Edit
+                  </button>
+                  <form method="POST" action="{{ url_for('admin.delete_user', user_id=u.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                      <i class="bi bi-trash"></i> Delete
+                    </button>
+                  </form>
+                </div>
+                {% else %}
+                  <span class="text-muted fst-italic">Current user</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Edit User Modals -->
+      {% for u in users %}
+      <div class="modal fade" id="editUserModal{{ u.id }}" tabindex="-1">
+        <div class="modal-dialog">
+          <form method="POST" action="{{ url_for('admin.edit_user', user_id=u.id) }}" class="modal-content fade-in">
+            <div class="modal-header">
+              <h5 class="modal-title">✏️ Edit User: {{ u.username }}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input type="text" class="form-control" name="username" value="{{ u.username }}" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" name="email" value="{{ u.email or '' }}">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Password (leave blank to keep current)</label>
+                <input type="password" class="form-control" name="password">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Role</label>
+                <select class="form-select" name="role">
+                  <option value="user" {% if u.role == "user" %}selected{% endif %}>User</option>
+                  <option value="admin" {% if u.role == "admin" %}selected{% endif %}>Admin</option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- CLIENTS TAB -->
+    <div class="tab-pane fade" id="clients" role="tabpanel">
+      <h4 class="text-white mb-3">All Clients</h4>
+      <div class="table-responsive">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Client ID</th>
+              <th>Token</th>
+              <th>Owner</th>
+              <th>Installer</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for client in clients %}
+            <tr>
+              <td>
+                <span class="tunnel-badge">{{ client.client_id }}</span>
+              </td>
+              <td>
+                <div class="input-group input-group-sm">
+                  <input type="password" id="token-{{ loop.index }}" value="{{ client.token }}" class="form-control" readonly>
+                  <button class="btn btn-outline-secondary" type="button" onclick="toggleToken({{ loop.index }})">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  <button class="btn btn-outline-success" type="button" onclick="copyToken({{ loop.index }})">
+                    <i class="bi bi-clipboard"></i>
+                  </button>
+                </div>
+              </td>
+              <td>{{ client.user.username if client.user else '-' }}</td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <code class="installer-code">
+                    curl .../{{ client.client_id }}/••••••••-installer.sh
+                  </code>
+                  <button class="btn btn-sm btn-outline-primary" onclick="copyCurl({{ loop.index }})" title="Copy command">
+                    <i class="bi bi-clipboard"></i>
+                  </button>
+                  <input type="text" id="installer-{{ loop.index }}" class="visually-hidden"
+                    value='curl -sSL "{{ request.host_url }}script/{{ client.client_id }}/{{ client.token }}-installer.sh" | bash' readonly>
+                </div>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <a href="{{ url_for('main.manage_tunnels', client_id=client.client_id) }}" class="btn btn-sm btn-danger">
+                    <i class="bi bi-folder2-open"></i> Manage
+                  </a>
+                  <form method="POST" action="{{ url_for('admin.delete_client', client_id=client.client_id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                      <i class="bi bi-trash"></i> Delete
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TUNNELS TAB -->
+    <div class="tab-pane fade" id="tunnels" role="tabpanel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="text-white">All Tunnels</h4>
+        <div class="text-muted">{{ clients|length }} clients with tunnels</div>
+      </div>
+      
+      <div class="accordion" id="tunnelAccordion">
+        {% for client in clients %}
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading{{ loop.index }}">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}">
+              <div class="d-flex align-items-center gap-3">
+                <span class="tunnel-badge">{{ client.client_id }}</span>
+                <span>
+                  {{ client.user.username if client.user else 'Unknown Owner' }}
+                  <span class="badge bg-secondary ms-2">
+                    {{ client.frpc_config|length if client.frpc_config else 0 }} tunnels
+                  </span>
+                </span>
+              </div>
+            </button>
+          </h2>
+          <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#tunnelAccordion">
+            <div class="accordion-body">
+              {% if client.frpc_config %}
+              <div class="tunnel-details">
+                {% for proxy in client.frpc_config %}
+                <div class="tunnel-item">
+                  <div class="tunnel-info">
+                    <span class="badge bg-dark">{{ proxy.name }}</span>
+                    <span class="badge bg-primary">{{ proxy.type|upper }}</span>
+                    <span class="text-white">{{ proxy.localIP }}:{{ proxy.localPort }}</span>
+                    <span class="tunnel-arrow">→</span>
+                    <span class="text-white">{{ proxy.remotePort }}</span>
+                  </div>
+                  <div class="action-buttons">
+                    <form method="POST" action="{{ url_for('admin.delete_tunnel', client_id=client.client_id, index=loop.index0) }}" class="d-inline">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i> Delete Tunnel
+                      </button>
+                    </form>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+              {% else %}
+              <div class="alert alert-secondary mb-0">
+                <i class="bi bi-info-circle"></i> No tunnels configured for this client
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add User -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('admin.add_user') }}" class="modal-content fade-in">
+      <div class="modal-header">
+        <h5 class="modal-title">➕ Add New User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="username" class="form-label">Username</label>
+          <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+        <div class="mb-3">
+          <label for="email" class="form-label">Email (optional)</label>
+          <input type="email" class="form-control" id="email" name="email">
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <div class="mb-3">
+          <label for="role" class="form-label">Role</label>
+          <select class="form-select" id="role" name="role">
+            <option value="user" selected>User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create User</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endif %}
+
+<script>
+function toggleToken(index) {
+  const input = document.getElementById("token-" + index);
+  input.type = input.type === "password" ? "text" : "password";
+}
+
+function copyToken(index) {
+  const input = document.getElementById("token-" + index);
+  input.type = "text";
+  input.select();
+  input.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+  input.type = "password";
+  showToast('📋 Token copied to clipboard', 'success');
+}
+
+function copyCurl(index) {
+  const input = document.getElementById("installer-" + index);
+  input.type = "text";
+  input.select();
+  input.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+  input.type = "hidden";
+  showToast('📋 Command copied to clipboard!', 'success');
+}
+</script>
+
+{% endblock %}

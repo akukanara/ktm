@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4 text-white">Clients</h2>
+<button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addClientModal">➕ Add Client</button>
+<div class="modal fade" id="addClientModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content fade-in">
+      <form method="POST" action="{{ url_for('main.clients') }}">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New Client</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="client_id" class="form-label">Client Name</label>
+            <input type="text" class="form-control" name="client_id" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<table class="custom-table">
+  <thead>
+    <tr>
+      <th>Client ID</th>
+      {% if current_user.role == 'admin' %}
+        <th>Owner</th>
+      {% endif %}
+      <th>Token</th>
+      <th>Installer</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for client in clients %}
+    <tr>
+      <td>{{ client.client_id }}</td>
+      {% if current_user.role == 'admin' %}
+        <td>{{ client.user.username or client.user.name or client.user.email }}</td>
+      {% endif %}
+      <td>
+        <div class="input-group">
+          <input type="password" id="token-{{ loop.index }}" value="{{ client.token }}" class="form-control" readonly>
+          <button class="btn btn-outline-secondary" type="button" onclick="toggleToken({{ loop.index }})">
+            <i class="bi bi-eye"></i>
+          </button>
+          <button class="btn btn-outline-success" type="button" onclick="copyToken({{ loop.index }})">
+            <i class="bi bi-clipboard"></i>
+          </button>
+        </div>
+      </td>
+    <td class="text-nowrap">
+      <div class="d-flex align-items-center gap-2">
+        <code class="text-truncate" style="max-width: 400px;">
+          curl -sSL "{{ request.host_url }}script/{{ client.client_id }}/••••••••-installer.sh" | bash
+        </code>
+        <button class="btn btn-outline-primary btn-sm" onclick="copyCurl({{ loop.index }})" title="Copy command">
+          <i class="bi bi-clipboard"></i>
+        </button>
+        <input type="text" id="installer-{{ loop.index }}" class="visually-hidden"
+          value='curl -sSL "{{ request.host_url }}script/{{ client.client_id }}/{{ client.token }}-installer.sh" | bash' readonly>
+      </div>
+    </td>
+      <td>  
+        <a href="{{ url_for('main.manage_tunnels', client_id=client.client_id) }}" class="btn btn-sm btn-danger">Manage Tunnels</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<script>
+function toggleToken(index) {
+  const input = document.getElementById("token-" + index);
+  input.type = input.type === "password" ? "text" : "password";
+}
+
+function copyToken(index) {
+  const input = document.getElementById("token-" + index);
+  input.type = "text"; // ensure it's visible to copy
+  input.select();
+  input.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+  input.type = "password"; // revert
+  showToast('📋 Token copied to clipboard', 'success');
+}
+
+function copyCurl(index) {
+  const input = document.getElementById("installer-" + index);
+  input.type = "text";
+  input.select();
+  input.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+  input.type = "hidden";
+  showToast('📋 Command copied to clipboard!', 'success');
+}
+</script>
+{% endblock %}

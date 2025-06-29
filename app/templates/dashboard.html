@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .stats-card {
+    background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+    border-radius: 12px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+  }
+  
+  .stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+  
+  .stats-card h5 {
+    color: #6c757d;
+    font-weight: 500;
+  }
+  
+  .stats-card h2 {
+    color: #dc3545;
+    font-weight: 700;
+    margin-top: 0.5rem;
+  }
+  
+  .custom-table {
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+  
+  .custom-table thead {
+    background: linear-gradient(to right, #dc3545, #a71d2a);
+    color: white;
+  }
+  
+  .custom-table th {
+    border: none;
+    font-weight: 500;
+    padding: 12px 16px;
+  }
+  
+  .custom-table td {
+    padding: 12px 16px;
+    vertical-align: middle;
+    border-top: 1px solid #f1f1f1;
+  }
+  
+  .custom-table tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .action-btn {
+    border-radius: 20px;
+    padding: 5px 15px;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  
+  .view-all-btn {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+</style>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Welcome, <span class="text-danger">{{ current_user.username }}</span></h2>
+  </div>
+
+  <div class="row mb-4 g-4">
+    <div class="col-md-6">
+      <div class="stats-card h-100">
+        <div class="card-body text-center p-4">
+          <h5><i class="bi bi-laptop"></i> Total Clients</h5>
+          <h2 class="display-5">{{ total_clients }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="stats-card h-100">
+        <div class="card-body text-center p-4">
+          <h5><i class="bi bi-plug"></i> Total Tunnels</h5>
+          <h2 class="display-5">{{ total_tunnels }}</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">Client Summary</h4>
+      {% if clients|length > 2 %}
+        <small class="text-muted">Showing top 2 of {{ clients|length }} clients</small>
+      {% endif %}
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover custom-table mb-0">
+          <thead>
+            <tr>
+              <th>Client ID</th>
+              <th># of Tunnels</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for client in clients[:2] %}
+            <tr>
+              <td class="font-monospace">{{ client.client_id }}</td>
+              <td>{{ client.frpc_config | length }}</td>
+              <td>
+                <a href="{{ url_for('main.manage_tunnels', client_id=client.client_id) }}" 
+                   class="btn btn-sm action-btn btn-outline-danger">
+                  <i class="bi bi-gear"></i> Manage
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if clients|length > 2 %}
+        <div class="text-center mt-3">
+          <a href="{{ url_for('main.all_clients') }}" class="btn btn-sm btn-link text-danger">
+            <i class="bi bi-chevron-down"></i> View All Clients
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  :root {
+    --primary: #ff4d4d;
+    --primary-dark: #e04545;
+    --text: #2d3748;
+    --text-light: #718096;
+    --border: #e2e8f0;
+  }
+
+  body {
+    display: flex;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+  }
+
+  .login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 500px;
+    padding: 2.5rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border);
+  }
+
+  .login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .login-logo {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin: 0 auto 1rem;
+    display: block;
+  }
+
+  .login-icon {
+    display: none; /* hide old icon */
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+    font-size: 0.9375rem;
+    font-weight: 500;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.85rem 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(255, 77, 77, 0.1);
+  }
+
+  .btn-login {
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+  }
+
+  .btn-login:hover {
+    background-color: var(--primary-dark);
+  }
+
+  .login-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9375rem;
+    color: var(--text-light);
+  }
+
+  .login-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+
+  .login-footer a:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <img class="login-logo" src="http://1.2.3.196:9001/api/v1/download-shared-object/aHR0cDovLzEyNy4wLjAuMTo5MDAwL2ltYWdlLyVFOCU4MyVBMSVFNiVBMSU4My1yZW1vdmViZy1wcmV2aWV3LnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPVJGRDBOVk9YVlpVR05RWENTSDZEJTJGMjAyNTA2MjklMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwNjI5VDAwMjUxNVomWC1BbXotRXhwaXJlcz00MzIwMCZYLUFtei1TZWN1cml0eS1Ub2tlbj1leUpoYkdjaU9pSklVelV4TWlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKaFkyTmxjM05MWlhraU9pSlNSa1F3VGxaUFdGWmFWVWRPVVZoRFUwZzJSQ0lzSW1WNGNDSTZNVGMxTVRFNU9UZ3dPU3dpY0dGeVpXNTBJam9pYTJGdVlYSmhJbjAuNkFwWnRLaE1MMVVEYlFnbVExT3l0SkhxWHdLXzNweW9PclR4U01xZGNRQmpjaUhYZW5MRTVwSXl6Y0F1SXRHbUllTFRjWDhjNG5zdFFlRGtMZEpOVUEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JnZlcnNpb25JZD1udWxsJlgtQW16LVNpZ25hdHVyZT00YThhNjU1MzQ4MTQ4N2Y4YmFmMDUyYzNjMThjMzE1NDNmZmI2OTkyZWEzNWU0NmVjOGMxZDBhMWQ0ODE2MmU4" alt="Logo">
+      <h2 style="color: var(--text); margin-bottom: 0.25rem; font-size: 1.75rem;">Welcome To KTM</h2>
+      <p style="color: var(--text-light); font-size: 1.0625rem;">Sign in to get Started</p>
+    </div>
+
+    <form method="POST">
+      <div class="form-group">
+        <label for="username" class="form-label">Email or Username</label>
+        <input type="text" name="username" id="username" class="form-control" placeholder="you@example.com" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" name="password" id="password" class="form-control" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="btn-login">
+        <span class="login-text">Sign In</span>
+      </button>
+
+      <div class="login-footer">
+        Don't have an account? <a href="https://t.me/ahysfkhri">Request access</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.querySelector('form').addEventListener('submit', function(e) {
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    const loginText = btn.querySelector('.login-text');
+    
+    loginText.innerHTML = `
+      <span class="spinner-border spinner-border-sm" role="status" style="vertical-align: middle; margin-right: 0.5rem;"></span>
+      Signing in...
+    `;
+  });
+</script>
+{% endblock %}

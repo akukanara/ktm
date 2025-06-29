@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-white">Manage Tunnels for {{ client_id }}</h2>
+
+<!-- Add Tunnel Button -->
+<button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addTunnelModal">
+  <i class="bi bi-plus-lg"></i> Add Tunnel
+</button>
+
+<!-- Add Tunnel Modal -->
+<div class="modal fade" id="addTunnelModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="add-form">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Tunnel</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body row g-3">
+          <div class="col-md-6">
+            <input id="add-name" class="form-control" placeholder="Name" required />
+          </div>
+          <div class="col-md-6">
+            <input id="add-localIP" class="form-control" placeholder="Local IP" value="127.0.0.1" required />
+          </div>
+          <div class="col-md-6">
+            <input id="add-localPort" class="form-control" placeholder="Local Port" type="number" required />
+          </div>
+          <div class="col-md-6">
+            <input id="add-remotePort" class="form-control" placeholder="Remote Port" type="number" required />
+          </div>
+          <div class="col-md-6">
+            <select id="add-type" class="form-select" required>
+              <option value="tcp">TCP</option>
+              <option value="udp">UDP</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary w-100">➕ Add Tunnel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Tunnel Modal -->
+<div class="modal fade" id="editTunnelModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="edit-form">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Tunnel</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body row g-3">
+          <div class="col-md-6">
+            <input id="edit-name" class="form-control" placeholder="Name" required />
+          </div>
+          <div class="col-md-6">
+            <input id="edit-localIP" class="form-control" placeholder="Local IP" required />
+          </div>
+          <div class="col-md-6">
+            <input id="edit-localPort" class="form-control" placeholder="Local Port" type="number" required />
+          </div>
+          <div class="col-md-6">
+            <input id="edit-remotePort" class="form-control" placeholder="Remote Port" type="number" required />
+          </div>
+          <div class="col-md-6">
+            <select id="edit-type" class="form-select" required>
+              <option value="tcp">TCP</option>
+              <option value="udp">UDP</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success w-100">💾 Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Tunnel Table -->
+<table class="custom-table">
+  <thead class="table-dark">
+    <tr>
+      <th>Name</th>
+      <th>Local IP</th>
+      <th>Local Port</th>
+      <th>Remote Port</th>
+      <th>Protocol</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="tunnels-body"></tbody>
+</table>
+
+<script>
+let tunnels = {{ frpc_config|tojson }};
+let editIndex = null;
+const tunnelsBody = document.getElementById('tunnels-body');
+
+function renderTable() {
+  tunnelsBody.innerHTML = '';
+  tunnels.forEach((tunnel, i) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${tunnel.name}</td>
+      <td>${tunnel.localIP}</td>
+      <td>${tunnel.localPort}</td>
+      <td>${tunnel.remotePort}</td>
+      <td>${tunnel.type || 'tcp'}</td>
+      <td>${tunnel.enabled ? '<span class="text-success"><i class="bi bi-toggle-on"></i> Enabled</span>' : '<span class="text-muted"><i class="bi bi-toggle-off"></i> Disabled</span>'}</td>
+      <td>
+        <button class="btn btn-sm btn-warning me-1" onclick="editTunnel(${i})" data-bs-toggle="modal" data-bs-target="#editTunnelModal"><i class="bi bi-pencil"></i> Edit</button>
+        <button class="btn btn-sm btn-secondary me-1" onclick="toggleEnabled(${i})">${tunnel.enabled ? 'Disable' : 'Enable'}</button>
+        <button class="btn btn-sm btn-danger" onclick="removeTunnel(${i})"><i class="bi bi-trash"></i> Delete</button>
+      </td>
+    `;
+    tunnelsBody.appendChild(row);
+  });
+}
+
+function editTunnel(i) {
+  editIndex = i;
+  const t = tunnels[i];
+  document.getElementById('edit-name').value = t.name;
+  document.getElementById('edit-localIP').value = t.localIP;
+  document.getElementById('edit-localPort').value = t.localPort;
+  document.getElementById('edit-remotePort').value = t.remotePort;
+  document.getElementById('edit-type').value = t.type || 'tcp';
+}
+
+function toggleEnabled(i) {
+  tunnels[i].enabled = !tunnels[i].enabled;
+  saveAllTunnels();
+  showToast(`🔁 Tunnel "${tunnels[i].name}" ${tunnels[i].enabled ? 'enabled' : 'disabled'}`, 'info');
+}
+
+function removeTunnel(i) {
+  const name = tunnels[i].name;
+  tunnels.splice(i, 1);
+  saveAllTunnels();
+  showToast(`🗑️ Tunnel "${name}" removed`, 'warning');
+}
+
+document.getElementById('add-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const newTunnel = {
+    name: document.getElementById('add-name').value,
+    localIP: document.getElementById('add-localIP').value,
+    localPort: parseInt(document.getElementById('add-localPort').value),
+    remotePort: parseInt(document.getElementById('add-remotePort').value),
+    type: document.getElementById('add-type').value,
+    enabled: true
+  };
+  const valid = await validateTunnel(newTunnel);
+  if (!valid) return;
+
+  const resp = await fetch(window.location.pathname + "/add", {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ proxies: [newTunnel] })
+  });
+  const result = await resp.json();
+  if (resp.ok) {
+    tunnels.push(newTunnel);
+    renderTable();
+    showToast(`✅ Tunnel "${newTunnel.name}" added`, 'success');
+    bootstrap.Modal.getInstance(document.getElementById('addTunnelModal')).hide();
+    e.target.reset();
+  } else {
+    showToast(result.error || '❌ Failed to add tunnel', 'error');
+  }
+});
+
+document.getElementById('edit-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (editIndex === null) return;
+
+  const edited = {
+    name: document.getElementById('edit-name').value,
+    localIP: document.getElementById('edit-localIP').value,
+    localPort: parseInt(document.getElementById('edit-localPort').value),
+    remotePort: parseInt(document.getElementById('edit-remotePort').value),
+    type: document.getElementById('edit-type').value,
+    enabled: tunnels[editIndex].enabled
+  };
+  const valid = await validateTunnel(edited);
+  if (!valid) return;
+
+  const resp = await fetch(window.location.pathname + "/edit", {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ proxy: edited, index: editIndex })
+  });
+  const result = await resp.json();
+  if (resp.ok) {
+    tunnels[editIndex] = edited;
+    renderTable();
+    showToast(`💾 Tunnel "${edited.name}" updated`, 'success');
+    bootstrap.Modal.getInstance(document.getElementById('editTunnelModal')).hide();
+  } else {
+    showToast(result.error || '❌ Failed to edit tunnel', 'error');
+  }
+});
+
+async function validateTunnel(tunnel) {
+  const resp = await fetch(window.location.pathname, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ proxies: [tunnel], action: 'validate' })
+  });
+  const result = await resp.json();
+  if (!resp.ok) {
+    showToast(result.error || '❌ Error validating tunnel', 'error');
+    return false;
+  }
+  return true;
+}
+
+async function saveAllTunnels() {
+  const resp = await fetch(window.location.pathname, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ proxies: tunnels })
+  });
+  const result = await resp.json();
+  if (resp.ok) {
+    renderTable();
+    showToast('✅ Changes saved', 'success');
+  } else {
+    showToast(result.error || '❌ Failed to save tunnels', 'error');
+  }
+}
+
+renderTable();
+</script>
+{% endblock %}

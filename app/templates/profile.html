@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .edit-icon-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    padding: 0.5rem;
+    color: white;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    pointer-events: none;
+  }
+
+  .profile-photo-wrapper:hover .edit-icon-overlay {
+    opacity: 1;
+  }
+
+  .profile-photo-container {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1.5rem;
+  }
+
+  .verification-badge {
+    position: absolute;
+    top: 0px;
+    right: 5px;
+    z-index: 1;
+    background: white;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+
+  .verification-badge .bi-patch-check {
+    color: #28a745;
+    font-size: 20px;
+  }
+
+  .unverified-badge {
+    position: absolute;
+    top: 0px;
+    right: 5px;
+    z-index: 1;
+    background: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+
+  .unverified-badge .bi-question {
+    color: #ffc107;
+    font-size: 24px;
+  }
+
+  .email-verification-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .resend-verification-btn {
+    background: none;
+    border: none;
+    color: #dc3545;
+    padding: 0;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .resend-verification-btn:hover {
+    color: #a71d2a;
+    text-decoration: underline;
+  }
+</style>
+
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-danger text-white">
+        <h5 class="mb-0"><i class="bi bi-person-circle"></i> Profile</h5>
+      </div>
+      <div class="card-body text-center">
+
+        <div class="profile-photo-container">
+          {% if user.profile_url %}
+            <img src="{{ user.profile_url }}" alt="Profile Photo" class="rounded-circle"
+                 width="120" height="120" style="object-fit: cover; border: 2px solid #dc3545;">
+          {% else %}
+            <i class="bi bi-person-circle text-secondary" style="font-size: 6rem;"></i>
+          {% endif %}
+
+          {% if config.ENABLE_EMAIL_VERIFICATION and user.email %}
+            {% if user.email_verified %}
+              <div class="verification-badge" title="Verified">
+                <i class="bi bi-patch-check"></i>
+              </div>
+            {% else %}
+              <div class="unverified-badge" title="Unverified">
+                <i class="bi bi-question"></i>
+              </div>
+            {% endif %}
+          {% endif %}
+        </div>
+
+        <p><strong>Username:</strong> {{ user.username }}</p>
+        
+        <div class="email-verification-container">
+          <p class="mb-0"><strong>Email:</strong> {{ user.email or "not set" }}</p>
+          {% if config.ENABLE_EMAIL_VERIFICATION and user.email and not user.email_verified %}
+            <form method="POST" action="{{ url_for('main.resend_verification') }}" class="d-inline">
+              <input type="hidden" name="email" value="{{ user.email }}">
+              <button type="submit" class="resend-verification-btn">
+                <i class="bi bi-arrow-repeat"></i> Resend
+              </button>
+            </form>
+          {% endif %}
+        </div>
+
+        <p><strong>Role:</strong> {{ user.role or "user" }}</p>
+
+        <button class="btn btn-outline-danger btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+          <i class="bi bi-pencil-square"></i> Edit Profile
+        </button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Edit Profile -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('main.profile') }}" enctype="multipart/form-data">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title" id="editProfileModalLabel">Edit Profile</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Foto Profil -->
+          <div class="mb-3 text-center">
+            <label class="form-label d-block">Profile Photo</label>
+            <div class="profile-photo-wrapper d-inline-block" style="cursor: pointer; position: relative;">
+              <img src="{{ user.profile_url or url_for('static', filename='default.jpg') }}"
+                   alt="Current Photo"
+                   id="previewImage"
+                   class="rounded-circle"
+                   style="width: 100px; height: 100px; object-fit: cover; border: 2px solid #dc3545;">
+              <div class="edit-icon-overlay">
+                <i class="bi bi-pencil-fill"></i>
+              </div>
+              <input type="file" name="photo" id="photoInput" accept="image/*" style="display: none;">
+            </div>
+            <small class="d-block text-muted mt-2">Click photo to change (max 2MB)</small>
+          </div>
+
+          <!-- Email -->
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" name="email" value="{{ user.email or '' }}">
+          </div>
+
+          <!-- Password -->
+          <div class="mb-3">
+            <label for="password" class="form-label">New Password</label>
+            <input type="password" class="form-control" name="password" placeholder="Leave blank to keep current password">
+          </div>
+        </div>
+
+        <div class="modal-footer justify-content-between">
+
+          {% if config.ENABLE_EMAIL_VERIFICATION and user.email and not user.email_verified %}
+            <form method="POST" action="{{ url_for('main.resend_verification') }}" class="d-inline">
+              <input type="hidden" name="email" value="{{ user.email }}">
+              <button class="btn btn-warning btn-sm" type="submit">
+                <i class="bi bi-send"></i> Send Verification Email
+              </button>
+            </form>
+          {% endif %}
+
+          <div class="text-end">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-danger btn-sm">Save Changes</button>
+          </div>
+
+        </div>
+
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- JS Preview -->
+<script>
+  const photoWrapper = document.querySelector(".profile-photo-wrapper");
+  const fileInput = document.getElementById("photoInput");
+  const previewImage = document.getElementById("previewImage");
+
+  photoWrapper.addEventListener("click", () => fileInput.click());
+
+  fileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      previewImage.src = URL.createObjectURL(file);
+    }
+  });
+</script>
+
+{% endblock %}

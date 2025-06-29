@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5 text-center">
+  <div class="card shadow-sm p-4">
+    <h2 class="text-success mb-3">🎉 Email Verified Successfully</h2>
+    <p class="lead">Your email has been verified. You can now continue using Kana Tunnel.</p>
+    <a href="{{ url_for('main.profile') }}" class="btn btn-danger mt-3">Back to Profile</a>
+  </div>
+</div>
+{% endblock %}
