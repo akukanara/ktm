@@ -28,7 +28,7 @@ class Config:
     MAIL_PORT = 465
     MAIL_USE_TLS = False
     MAIL_USE_SSL = True  
-    MAIL_USERNAME = "noreply@kanara.xyz"
-    MAIL_PASSWORD = "&Rj63G$aL^!TK2"
+    MAIL_USERNAME = ""
+    MAIL_PASSWORD = ""
     MAIL_DEFAULT_SENDER = ("Kana Tunnel", "noreply@kanara.xyz")
     BASE_URL = os.getenv("BASE_URL", "http://localhost:5000")
