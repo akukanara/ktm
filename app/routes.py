@@ -225,7 +225,7 @@ def get_frpc(client_id):
 
     response = {
         "common": {
-            "server_addr": "192.168.225.3",
+            "server_addr": current_app.config.get("FRPS_SERVER_ADDR", "127.0.0.1"),
             "server_port": current_app.config.get("FRPS_BIND_PORT", 7000),
             "token": current_app.config.get("FRPS_GLOBAL_TOKEN", "thisiskanaratunnel"),
             "protocol": "tcp",

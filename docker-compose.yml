@@ -2,16 +2,18 @@ services:
   db:
     image: postgres:16-alpine
     container_name: ktm-db-dev
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: ktm
-      POSTGRES_USER: kanara
-      POSTGRES_PASSWORD: akanunara
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${DB_HOST_PORT}:5432"
     volumes:
       - ktm-db-dev-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kanara -d ktm"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -26,13 +28,28 @@ services:
       db:
         condition: service_healthy
     network_mode: host
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgresql://kanara:akanunara@127.0.0.1:5432/ktm
-      SECRET_KEY: dev-secret-key
-      BASE_URL: http://localhost:${APP_HOST_PORT:-5000}
-      FRPS_BIND_ADDR: 0.0.0.0
-      FRPS_BIND_PORT: ${FRPS_HOST_PORT:-7000}
-      FRPS_GLOBAL_TOKEN: dev-frp-token
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY: ${SECRET_KEY}
+      BASE_URL: ${BASE_URL}
+      FRPS_BIND_ADDR: ${FRPS_BIND_ADDR}
+      FRPS_BIND_PORT: ${FRPS_BIND_PORT}
+      FRPS_SERVER_ADDR: ${FRPS_SERVER_ADDR}
+      FRPS_GLOBAL_TOKEN: ${FRPS_GLOBAL_TOKEN}
+      ENABLE_EMAIL_VERIFICATION: ${ENABLE_EMAIL_VERIFICATION}
+      USE_S3_UPLOAD: ${USE_S3_UPLOAD}
+      MAIL_SERVER: ${MAIL_SERVER}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USE_TLS: ${MAIL_USE_TLS}
+      MAIL_USE_SSL: ${MAIL_USE_SSL}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      S3_BUCKET: ${S3_BUCKET}
+      S3_REGION: ${S3_REGION}
+      S3_KEY: ${S3_KEY}
+      S3_SECRET: ${S3_SECRET}
     volumes:
       - ./app:/app/app
       - ./config.py:/app/config.py

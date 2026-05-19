@@ -5,13 +5,14 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "thisiskanaratunnel_secret")
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL",
-        "postgresql://kanara:akukanara@192.168.225.4/ktm",
+        "postgresql://postgres:postgres@127.0.0.1:5432/ktm",
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # FRP Config
     FRPS_BIND_ADDR = os.getenv("FRPS_BIND_ADDR", "0.0.0.0")
     FRPS_BIND_PORT = int(os.getenv("FRPS_BIND_PORT", "7000"))
+    FRPS_SERVER_ADDR = os.getenv("FRPS_SERVER_ADDR", "127.0.0.1")
     FRPS_GLOBAL_TOKEN = os.getenv("FRPS_GLOBAL_TOKEN", "thisiskanaratunnel")
 
     # Profile upload settings
