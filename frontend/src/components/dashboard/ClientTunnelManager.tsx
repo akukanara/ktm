@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Text, Badge, Grid, Flex, Box, Button, Dialog, TextField, Switch } from '@radix-ui/themes';
+import { Card, Text, Badge, Grid, Flex, Box, Button, Dialog, TextField, Switch, Theme } from '@radix-ui/themes';
 import { IconPlus, IconSettings, IconTrash, IconPlugConnected, IconWind, IconDeviceFloppy } from '@tabler/icons-react';
 
 interface Proxy {
@@ -77,109 +77,124 @@ export default function ClientTunnelManager({ clientId }: { clientId: string }) 
     handleSave(updated);
   };
 
-  if (loading) return <Text>Loading tunnels...</Text>;
-  if (!data) return <Text color="red">Failed to load client data.</Text>;
+  if (loading) {
+    return (
+      <Theme accentColor="lime" grayColor="sand" radius="large" scaling="100%">
+        <Text>Loading tunnels...</Text>
+      </Theme>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Theme accentColor="lime" grayColor="sand" radius="large" scaling="100%">
+        <Text color="red">Failed to load client data.</Text>
+      </Theme>
+    );
+  }
 
   return (
-    <Box>
-      <Flex justify="between" align="center" mb="6">
-        <h2 className="text-xl font-semibold text-slate-800">Tunnels for {clientId}</h2>
-        <Dialog.Root>
-          <Dialog.Trigger>
-            <Button color="lime" size="3">
-              <IconPlus size={18} className="mr-1" /> Add Tunnel
-            </Button>
-          </Dialog.Trigger>
-          <Dialog.Content maxWidth="450px">
-            <Dialog.Title>Add New Tunnel</Dialog.Title>
-            <Dialog.Description size="2" mb="4">
-              Configure a new port forwarding rule for this client.
-            </Dialog.Description>
-            
-            <Flex direction="column" gap="3">
-              <label>
-                <Text as="div" size="2" mb="1" weight="bold">Name</Text>
-                <TextField.Root 
-                  value={newProxy.name} 
-                  onChange={e => setNewProxy({...newProxy, name: e.target.value})}
-                  placeholder="e.g. web-app" 
-                />
-              </label>
-              <Flex gap="3">
-                <label className="flex-1">
-                  <Text as="div" size="2" mb="1" weight="bold">Local Port</Text>
+    <Theme accentColor="lime" grayColor="sand" radius="large" scaling="100%">
+      <Box>
+        <Flex justify="between" align="center" mb="6">
+          <h2 className="text-xl font-semibold text-slate-800">Tunnels for {clientId}</h2>
+          <Dialog.Root>
+            <Dialog.Trigger>
+              <Button color="lime" size="3">
+                <IconPlus size={18} className="mr-1" /> Add Tunnel
+              </Button>
+            </Dialog.Trigger>
+            <Dialog.Content maxWidth="450px">
+              <Dialog.Title>Add New Tunnel</Dialog.Title>
+              <Dialog.Description size="2" mb="4">
+                Configure a new port forwarding rule for this client.
+              </Dialog.Description>
+              
+              <Flex direction="column" gap="3">
+                <label>
+                  <Text as="div" size="2" mb="1" weight="bold">Name</Text>
                   <TextField.Root 
-                    type="number"
-                    value={newProxy.localPort} 
-                    onChange={e => setNewProxy({...newProxy, localPort: parseInt(e.target.value)})}
+                    value={newProxy.name} 
+                    onChange={e => setNewProxy({...newProxy, name: e.target.value})}
+                    placeholder="e.g. web-app" 
                   />
                 </label>
-                <label className="flex-1">
-                  <Text as="div" size="2" mb="1" weight="bold">Remote Port</Text>
-                  <TextField.Root 
-                    type="number"
-                    value={newProxy.remotePort} 
-                    onChange={e => setNewProxy({...newProxy, remotePort: parseInt(e.target.value)})}
-                  />
-                </label>
+                <Flex gap="3">
+                  <label className="flex-1">
+                    <Text as="div" size="2" mb="1" weight="bold">Local Port</Text>
+                    <TextField.Root 
+                      type="number"
+                      value={newProxy.localPort} 
+                      onChange={e => setNewProxy({...newProxy, localPort: parseInt(e.target.value)})}
+                    />
+                  </label>
+                  <label className="flex-1">
+                    <Text as="div" size="2" mb="1" weight="bold">Remote Port</Text>
+                    <TextField.Root 
+                      type="number"
+                      value={newProxy.remotePort} 
+                      onChange={e => setNewProxy({...newProxy, remotePort: parseInt(e.target.value)})}
+                    />
+                  </label>
+                </Flex>
               </Flex>
-            </Flex>
 
-            <Flex gap="3" mt="6" justify="end">
-              <Dialog.Close>
-                <Button variant="soft" color="gray">Cancel</Button>
-              </Dialog.Close>
-              <Dialog.Close>
-                <Button color="lime" onClick={addTunnel}>Create Tunnel</Button>
-              </Dialog.Close>
-            </Flex>
-          </Dialog.Content>
-        </Dialog.Root>
-      </Flex>
+              <Flex gap="3" mt="6" justify="end">
+                <Dialog.Close>
+                  <Button variant="soft" color="gray">Cancel</Button>
+                </Dialog.Close>
+                <Dialog.Close>
+                  <Button color="lime" onClick={addTunnel}>Create Tunnel</Button>
+                </Dialog.Close>
+              </Flex>
+            </Dialog.Content>
+          </Dialog.Root>
+        </Flex>
 
-      <Grid columns={{ initial: '1', sm: '2' }} gap="4">
-        {data.frpc_config.map((proxy, index) => (
-          <Card key={index} size="2" className={proxy.enabled ? '' : 'opacity-70 grayscale'}>
-            <Flex justify="between" align="center" mb="4">
-              <Box>
-                <Text weight="bold" size="3" className="block">{proxy.name}</Text>
-                <Badge color="gray" variant="surface">{proxy.type.toUpperCase()}</Badge>
+        <Grid columns={{ initial: '1', sm: '2' }} gap="4">
+          {data.frpc_config.map((proxy, index) => (
+            <Card key={index} size="2" className={proxy.enabled ? '' : 'opacity-70 grayscale'}>
+              <Flex justify="between" align="center" mb="4">
+                <Box>
+                  <Text weight="bold" size="3" className="block">{proxy.name}</Text>
+                  <Badge color="gray" variant="surface">{proxy.type.toUpperCase()}</Badge>
+                </Box>
+                <Flex gap="3" align="center">
+                  <Switch 
+                    checked={proxy.enabled} 
+                    onCheckedChange={() => toggleTunnel(index)}
+                    color="lime"
+                  />
+                  <Button variant="ghost" color="red" onClick={() => deleteTunnel(index)}>
+                    <IconTrash size={18} />
+                  </Button>
+                </Flex>
+              </Flex>
+
+              <Box className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg">
+                <Flex align="center" gap="3" mb="2">
+                  <IconPlugConnected size={16} className="text-slate-400" />
+                  <Text size="2" className="font-mono">
+                    {proxy.localIP}:{proxy.localPort}
+                  </Text>
+                </Flex>
+                <Flex align="center" gap="3">
+                  <IconWind size={16} className="text-lime-500" />
+                  <Text size="2" className="font-mono font-bold">
+                    Remote Port: {proxy.remotePort}
+                  </Text>
+                </Flex>
               </Box>
-              <Flex gap="3" align="center">
-                <Switch 
-                  checked={proxy.enabled} 
-                  onCheckedChange={() => toggleTunnel(index)}
-                  color="lime"
-                />
-                <Button variant="ghost" color="red" onClick={() => deleteTunnel(index)}>
-                  <IconTrash size={18} />
-                </Button>
-              </Flex>
-            </Flex>
+            </Card>
+          ))}
+        </Grid>
 
-            <Box className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg">
-              <Flex align="center" gap="3" mb="2">
-                <IconPlugConnected size={16} className="text-slate-400" />
-                <Text size="2" className="font-mono">
-                  {proxy.localIP}:{proxy.localPort}
-                </Text>
-              </Flex>
-              <Flex align="center" gap="3">
-                <IconWind size={16} className="text-lime-500" />
-                <Text size="2" className="font-mono font-bold">
-                  Remote Port: {proxy.remotePort}
-                </Text>
-              </Flex>
-            </Box>
+        {data.frpc_config.length === 0 && (
+          <Card size="3" className="text-center py-12 border-dashed">
+            <Text color="gray">No tunnels configured for this client.</Text>
           </Card>
-        ))}
-      </Grid>
-
-      {data.frpc_config.length === 0 && (
-        <Card size="3" className="text-center py-12 border-dashed">
-          <Text color="gray">No tunnels configured for this client.</Text>
-        </Card>
-      )}
-    </Box>
+        )}
+      </Box>
+    </Theme>
   );
 }
