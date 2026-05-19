@@ -441,6 +441,33 @@ def verify_email_success():
     return redirect(url_for("main.profile"))
 
 
+@main.route("/tunnels")
+@login_required
+def tunnels_page():
+    return _serve_frontend_page("tunnels/index.html")
+
+
+@main.route("/admin")
+@login_required
+def admin_page():
+    if current_user.role != "admin":
+        abort(403)
+    return _serve_frontend_page("admin/index.html")
+
+
+@main.route("/login")
+def login_page():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.dashboard"))
+    return _serve_frontend_page("login/index.html")
+
+
+@main.route("/clients/<client_id>/tunnels")
+@login_required
+def client_tunnels_page(client_id):
+    return _serve_frontend_page("clients/manage/index.html")
+
+
 @main.route("/api/tunnels")
 @login_required
 def tunnels_data():

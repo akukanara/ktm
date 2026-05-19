@@ -1,0 +1,34 @@
+---
+import { Theme } from '@radix-ui/themes';
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import ClientTunnelManager from '../../components/dashboard/ClientTunnelManager';
+---
+
+<DashboardLayout title="Manage Tunnels | KTM" heading="Manage Tunnels" subheading="Configure port forwarding for your client">
+  <Theme accentColor="lime" grayColor="sand" radius="large" scaling="100%">
+    <div id="tunnel-manager-container">
+      <p>Loading manager...</p>
+    </div>
+  </Theme>
+</DashboardLayout>
+
+<script>
+  import React from 'react';
+  import ReactDOM from 'react-dom/client';
+  import { Theme } from '@radix-ui/themes';
+  import ClientTunnelManager from '../../components/dashboard/ClientTunnelManager';
+
+  // Parse ID from URL: /clients/CLIENT_ID/tunnels
+  const pathParts = window.location.pathname.split('/');
+  const clientId = pathParts[2];
+
+  const container = document.getElementById('tunnel-manager-container');
+  if (container && clientId) {
+    const root = ReactDOM.createRoot(container);
+    root.render(
+      React.createElement(Theme, { accentColor: 'lime', grayColor: 'sand', radius: 'large' },
+        React.createElement(ClientTunnelManager, { clientId: clientId })
+      )
+    );
+  }
+</script>
