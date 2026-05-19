@@ -1,0 +1,70 @@
+---
+import { Theme, Card, Text, Button, TextField } from '@radix-ui/themes';
+import DashboardLayout from '../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Profile | KTM" heading="Profile" subheading="Keep account metadata and authentication details up to date.">
+  <Theme accentColor="lime" grayColor="sand" radius="large" scaling="100%">
+    <div class="mx-auto max-w-2xl">
+      <Card className="border border-lime-100 p-6 shadow-soft">
+        <div class="mb-6 flex items-center justify-between rounded-xl border border-lime-100 bg-lime-50/60 p-4">
+          <div class="flex items-center gap-3">
+            <div id="profile-avatar" class="grid h-12 w-12 place-items-center rounded-full bg-lime-500 text-sm font-bold text-white">U</div>
+            <div>
+              <p id="profile-username" class="font-semibold text-slate-900">Username</p>
+              <Text id="profile-role" size="2" color="gray">Role: user</Text>
+            </div>
+          </div>
+          <span id="profile-verified" class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-lime-700">Not verified</span>
+        </div>
+
+        <form method="POST" action="/profile" enctype="multipart/form-data" class="space-y-4">
+          <label class="block">
+            <Text as="p" size="2" className="mb-1">Email</Text>
+            <TextField.Root id="profile-email" type="email" name="email" placeholder="you@example.com" />
+          </label>
+          <label class="block">
+            <Text as="p" size="2" className="mb-1">New Password</Text>
+            <TextField.Root type="password" name="password" placeholder="Leave blank to keep current password" />
+          </label>
+          <label class="block text-sm">
+            <span class="mb-1 block font-medium text-slate-700">Profile Photo</span>
+            <input class="block w-full rounded-lg border border-lime-100 bg-white p-2 text-sm" type="file" name="photo" accept="image/*" />
+          </label>
+          <Button type="submit" size="3">Save Changes</Button>
+        </form>
+      </Card>
+    </div>
+  </Theme>
+</DashboardLayout>
+
+<script>
+  const username = document.getElementById('profile-username');
+  const role = document.getElementById('profile-role');
+  const verified = document.getElementById('profile-verified');
+  const email = document.getElementById('profile-email') as HTMLInputElement | null;
+  const avatar = document.getElementById('profile-avatar');
+
+  fetch('/api/me', { credentials: 'same-origin' })
+    .then((response) => {
+      if (!response.ok) throw new Error('Failed to load profile');
+      return response.json();
+    })
+    .then((me) => {
+      if (username) username.textContent = me.username || 'User';
+      if (role) role.textContent = `Role: ${me.role || 'user'}`;
+      if (verified) verified.textContent = me.email_verified ? 'Verified' : 'Not verified';
+      if (email) {
+        email.value = me.email || '';
+      }
+      if (me.username?.length && avatar) {
+        avatar.textContent = me.username[0].toUpperCase();
+      }
+      if (me.profile_url && avatar) {
+        avatar.innerHTML = `<img src=\"${me.profile_url}\" alt=\"profile\" class=\"h-12 w-12 rounded-full object-cover\"/>`;
+      }
+    })
+    .catch(() => {
+      if (verified) verified.textContent = 'Failed to load';
+    });
+</script>

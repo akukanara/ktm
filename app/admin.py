@@ -1,17 +1,42 @@
-from flask import Blueprint, render_template, request, redirect, url_for, abort, flash
+import os
+from flask import Blueprint, request, redirect, url_for, abort, flash, jsonify, send_file
 from flask_login import login_required, current_user
 from .models import db, Client, User
 
 admin = Blueprint("admin", __name__)
+
+
+def _frontend_dist_dir():
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"))
 
 @admin.route("/admin")
 @login_required
 def admin_dashboard():
     if current_user.role != "admin":
         abort(403)
+    page = os.path.join(_frontend_dist_dir(), "admin", "index.html")
+    if not os.path.exists(page):
+        abort(503, description="Frontend build not found. Run: cd frontend && npm run build")
+    return send_file(page)
+
+
+@admin.route("/api/admin")
+@login_required
+def admin_data():
+    if current_user.role != "admin":
+        abort(403)
     users = User.query.all()
     clients = Client.query.all()
-    return render_template("admin.html", users=users, clients=clients)
+    return jsonify({
+        "users": [
+            {"id": u.id, "username": u.username, "email": u.email, "role": u.role}
+            for u in users
+        ],
+        "clients": [
+            {"id": c.id, "client_id": c.client_id, "user_id": c.user_id}
+            for c in clients
+        ]
+    })
 
 
 @admin.route("/admin/users/<int:user_id>/delete", methods=["POST"])
@@ -132,4 +157,3 @@ def edit_user(user_id):
     db.session.commit()
     flash("✅ User updated successfully", "success")
     return redirect(url_for("admin.admin_dashboard"))
-

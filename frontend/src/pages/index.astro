@@ -1,0 +1,107 @@
+---
+import { Theme, Card, Table, Button } from '@radix-ui/themes';
+import DashboardLayout from '../layouts/DashboardLayout.astro';
+import RadixStatCard from '../components/RadixStatCard';
+import DashboardDialogs from '../components/DashboardDialogs';
+
+const metricGridClass = 'mb-6 grid gap-3 md:grid-cols-3';
+const panelClass =
+  'overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 p-0 shadow-[0_1px_2px_rgba(16,24,40,0.06),0_8px_24px_rgba(16,24,40,0.05)] transition-all duration-200 ease-in-out dark:border-slate-800 dark:bg-slate-950/80';
+---
+
+<DashboardLayout title="Dashboard | KTM" heading="Dashboard" subheading="Track active clients and tunnel health in one lightweight console.">
+  <Theme accentColor="lime" grayColor="sand" radius="large" scaling="100%" appearance="inherit">
+    <section class={metricGridClass}>
+      <div id="stat-total-clients"><RadixStatCard label="Total Clients" value="-" /></div>
+      <div id="stat-total-tunnels"><RadixStatCard label="Total Tunnels" value="-" /></div>
+      <Card size="2" className="rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-3.5 shadow-[0_1px_2px_rgba(16,24,40,0.06),0_8px_20px_rgba(16,24,40,0.04)] transition-all duration-200 ease-in-out hover:border-lime-300/70 dark:border-slate-800 dark:bg-slate-950/80">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">FRPS</p>
+        <p class="mt-1 text-[1.9rem] font-semibold leading-none tracking-[-0.02em] text-lime-700 dark:text-lime-400">Running</p>
+      </Card>
+    </section>
+
+    <Card className={panelClass}>
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 px-4 py-3 dark:border-slate-800">
+        <h2 class="text-sm font-semibold uppercase tracking-[0.08em] text-slate-700 dark:text-slate-300">Client Summary</h2>
+        <div class="flex items-center gap-2">
+          <DashboardDialogs client:load />
+          <Button
+            variant="soft"
+            disabled
+            className="h-8 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 transition-all duration-200 ease-in-out data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+          >
+            Filter (soon)
+          </Button>
+          <a
+            href="/clients"
+            class="inline-flex h-8 items-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 transition-all duration-200 ease-in-out hover:border-lime-300 hover:text-lime-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-lime-500 dark:hover:text-lime-300"
+          >
+            Open Clients
+          </a>
+        </div>
+      </div>
+      <Table.Root variant="surface" className="text-[13px]">
+        <Table.Header>
+          <Table.Row className="bg-slate-50/70 dark:bg-slate-900/60">
+            <Table.ColumnHeaderCell className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Client ID</Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Tunnels</Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Status</Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Action</Table.ColumnHeaderCell>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body id="dashboard-clients-body">
+          <Table.Row>
+            <Table.Cell colSpan={4} className="py-6 text-center text-slate-500 dark:text-slate-400">
+              Loading...
+            </Table.Cell>
+          </Table.Row>
+        </Table.Body>
+      </Table.Root>
+    </Card>
+  </Theme>
+</DashboardLayout>
+
+<script>
+  const statClients = document.getElementById('stat-total-clients');
+  const statTunnels = document.getElementById('stat-total-tunnels');
+  const body = document.getElementById('dashboard-clients-body');
+
+  function statCard(label: string, value: any) {
+    return `<div class="rt-Card rt-r-size-2 rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-3.5 shadow-[0_1px_2px_rgba(16,24,40,0.06),0_8px_20px_rgba(16,24,40,0.04)] transition-all duration-200 ease-in-out hover:border-lime-300/70 dark:border-slate-800 dark:bg-slate-950/80"><p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">${label}</p><p class="mt-1 text-[1.9rem] font-semibold leading-none tracking-[-0.02em] text-slate-900 dark:text-slate-100">${value}</p></div>`;
+  }
+
+  function tableRow(cells: any[]) {
+    return `<tr class="transition-all duration-200 ease-in-out hover:bg-lime-50/50 dark:hover:bg-lime-900/10">${cells.map((cell) => `<td class=\"rt-TableCell align-middle py-2.5 text-slate-700 dark:text-slate-300\">${cell}</td>`).join('')}</tr>`;
+  }
+
+  fetch('/api/dashboard', { credentials: 'same-origin' })
+    .then((response) => {
+      if (!response.ok) throw new Error('Failed to load dashboard');
+      return response.json();
+    })
+    .then((data) => {
+      if (statClients) statClients.innerHTML = statCard('Total Clients', data.total_clients ?? 0);
+      if (statTunnels) statTunnels.innerHTML = statCard('Total Tunnels', data.total_tunnels ?? 0);
+
+      if (!body) return;
+
+      if (!data.clients?.length) {
+        body.innerHTML = tableRow(['-', '0', '<span class="rt-Badge rt-r-size-1 rt-variant-soft" data-accent-color="gray">empty</span>', '-']);
+        return;
+      }
+
+      body.innerHTML = data.clients
+        .map((client: any) => tableRow([
+          client.client_id,
+          client.tunnels ?? 0,
+          '<span class="rt-Badge rt-r-size-1 rt-variant-soft" data-accent-color="lime">healthy</span>',
+          '<a class="inline-flex h-8 items-center rounded-lg border border-lime-300/70 bg-lime-50 px-3 text-xs font-medium text-lime-700 transition-all duration-200 ease-in-out hover:bg-lime-100 dark:border-lime-600/60 dark:bg-lime-950/30 dark:text-lime-300 dark:hover:bg-lime-900/40" href="/clients">Manage</a>',
+        ]))
+        .join('');
+    })
+    .catch(() => {
+      if (body) body.innerHTML = tableRow(['-', '-', 'failed', '-']);
+      if (statClients) statClients.innerHTML = statCard('Total Clients', 0);
+      if (statTunnels) statTunnels.innerHTML = statCard('Total Tunnels', 0);
+    });
+</script>

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify, abort, send_file, Response, current_app, flash
+from flask import Blueprint, request, redirect, url_for, jsonify, abort, send_file, send_from_directory, Response, current_app, flash
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from botocore.exceptions import BotoCoreError, NoCredentialsError
@@ -10,6 +10,17 @@ from .models import db, Client, User
 from .email import send_verification_email
 
 main = Blueprint("main", __name__)
+
+def _frontend_dist_dir():
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"))
+
+
+def _serve_frontend_page(relative_path):
+    dist = _frontend_dist_dir()
+    full = os.path.join(dist, relative_path)
+    if not os.path.exists(full):
+        abort(503, description="Frontend build not found. Run: cd frontend && npm run build")
+    return send_file(full)
 
 
 def check_port_availability(port, exclude_client_id=None):
@@ -32,13 +43,7 @@ def check_port_availability(port, exclude_client_id=None):
 @main.route("/")
 @login_required
 def dashboard():
-    clients = Client.query.filter_by(user_id=current_user.id).all()
-    total_clients = len(clients)
-    total_tunnels = sum(len(c.frpc_config or []) for c in clients)
-
-    return render_template("dashboard.html", clients=clients,
-                           total_clients=total_clients,
-                           total_tunnels=total_tunnels)
+    return _serve_frontend_page("index.html")
 
 
 @main.route("/profile", methods=["GET", "POST"])
@@ -116,7 +121,7 @@ def profile():
 
         return redirect(url_for("main.profile"))
 
-    return render_template("profile.html", user=current_user, config=current_app.config)
+    return _serve_frontend_page("profile/index.html")
 
 
 
@@ -150,13 +155,64 @@ def clients():
         flash("✅ Client added successfully.", "success")
         return redirect(url_for("main.clients"))
 
+    return _serve_frontend_page("clients/index.html")
+
+
+@main.route("/api/me")
+@login_required
+def me():
+    return jsonify({
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email,
+        "role": current_user.role,
+        "email_verified": bool(current_user.email_verified),
+        "profile_url": current_user.profile_url,
+    })
+
+
+@main.route("/api/dashboard")
+@login_required
+def dashboard_data():
+    if current_user.role == "admin":
+        clients = Client.query.all()
+    else:
+        clients = Client.query.filter_by(user_id=current_user.id).all()
+
+    return jsonify({
+        "total_clients": len(clients),
+        "total_tunnels": sum(len(c.frpc_config or []) for c in clients),
+        "clients": [
+            {
+                "client_id": c.client_id,
+                "tunnels": len(c.frpc_config or []),
+                "status": "healthy",
+            }
+            for c in clients[:8]
+        ],
+    })
+
+
+@main.route("/api/clients")
+@login_required
+def clients_data():
     if current_user.role == "admin":
         all_clients = Client.query.all()
     else:
         all_clients = Client.query.filter_by(user_id=current_user.id).all()
 
-    return render_template("clients.html", clients=all_clients)
-
+    return jsonify({
+        "clients": [
+            {
+                "client_id": c.client_id,
+                "token": c.token,
+                "owner": c.user.username if c.user else None,
+                "tunnels": len(c.frpc_config or []),
+                "installer": f"curl -sSL \"{request.host_url}script/{c.client_id}/{c.token}-installer.sh\" | bash",
+            }
+            for c in all_clients
+        ]
+    })
 
 
 @main.route("/api/<client_id>/kana_frpc.json")
@@ -264,7 +320,10 @@ def manage_tunnels(client_id):
 
         return jsonify({"error": "Invalid action"}), 400
 
-    return render_template("tunnels.html", client=client, frpc_config=client.frpc_config)
+    return jsonify({
+        "client_id": client.client_id,
+        "frpc_config": client.frpc_config or []
+    })
 
 @main.route("/clients/<client_id>/tunnels/add", methods=["POST"])
 @login_required
@@ -379,6 +438,10 @@ def resend_verification():
 
 @main.route("/verify_email/success")
 def verify_email_success():
-    return render_template("verify_success.html")
+    return redirect(url_for("main.profile"))
 
 
+@main.route("/_astro/<path:filename>")
+def astro_assets(filename):
+    assets_dir = os.path.join(_frontend_dist_dir(), "_astro")
+    return send_from_directory(assets_dir, filename)

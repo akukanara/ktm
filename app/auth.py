@@ -1,9 +1,13 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+import os
+from flask import Blueprint, request, redirect, url_for, send_file, abort
 from flask_login import login_user, logout_user
 from .models import User
 from . import db, login_manager
 from sqlalchemy import or_
 auth = Blueprint("auth", __name__)
+
+def _frontend_dist_dir():
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"))
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -23,11 +27,13 @@ def login():
         if user and user.check_password(password):
             login_user(user)
             return redirect(url_for("main.dashboard"))
-        
-        # (Opsional) Tambahkan pesan error ke template
-        return render_template("login.html", error="Invalid credentials.")
-    
-    return render_template("login.html")
+
+        return redirect(url_for("auth.login", error="invalid"))
+
+    login_page = os.path.join(_frontend_dist_dir(), "login", "index.html")
+    if not os.path.exists(login_page):
+        abort(503, description="Frontend build not found. Run: cd frontend && npm run build")
+    return send_file(login_page)
 
 @auth.route("/logout")
 def logout():

@@ -1,0 +1,122 @@
+---
+import { Theme, Card, Table, Badge, Button } from '@radix-ui/themes';
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Admin | KTM" heading="Admin" subheading="Manage users and clients with role-based access control.">
+  <Theme accentColor="lime" grayColor="sand" radius="large" scaling="100%">
+    <section class="mb-6 grid gap-4 md:grid-cols-2">
+      <Card className="border border-lime-100 p-4 shadow-soft">
+        <p class="text-sm text-slate-600">Total Users</p>
+        <p id="admin-total-users" class="mt-2 text-3xl font-bold text-slate-900">-</p>
+      </Card>
+      <Card className="border border-lime-100 p-4 shadow-soft">
+        <p class="text-sm text-slate-600">Total Clients</p>
+        <p id="admin-total-clients" class="mt-2 text-3xl font-bold text-slate-900">-</p>
+      </Card>
+    </section>
+
+    <Card className="mb-6 overflow-hidden border border-lime-100 p-0 shadow-soft">
+      <div class="flex items-center justify-between border-b border-lime-100 px-4 py-3">
+        <h2 class="text-base font-semibold text-slate-900">Users</h2>
+        <Badge color="lime" id="admin-role-badge">Admin Only</Badge>
+      </div>
+      <Table.Root variant="surface">
+        <Table.Header>
+          <Table.Row>
+            <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell>Username</Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell>Email</Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell>Role</Table.ColumnHeaderCell>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body id="admin-users-body">
+          <Table.Row>
+            <Table.Cell colSpan={4}>Loading...</Table.Cell>
+          </Table.Row>
+        </Table.Body>
+      </Table.Root>
+    </Card>
+
+    <Card className="overflow-hidden border border-lime-100 p-0 shadow-soft">
+      <div class="flex items-center justify-between border-b border-lime-100 px-4 py-3">
+        <h2 class="text-base font-semibold text-slate-900">Clients</h2>
+        <a href="/clients"><Button variant="soft">Open Client Manager</Button></a>
+      </div>
+      <Table.Root variant="surface">
+        <Table.Header>
+          <Table.Row>
+            <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell>Client ID</Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell>User ID</Table.ColumnHeaderCell>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body id="admin-clients-body">
+          <Table.Row>
+            <Table.Cell colSpan={3}>Loading...</Table.Cell>
+          </Table.Row>
+        </Table.Body>
+      </Table.Root>
+    </Card>
+  </Theme>
+</DashboardLayout>
+
+<script>
+  const usersBody = document.getElementById('admin-users-body');
+  const clientsBody = document.getElementById('admin-clients-body');
+  const totalUsers = document.getElementById('admin-total-users');
+  const totalClients = document.getElementById('admin-total-clients');
+
+  function row(cells: any[]) {
+    return `<tr>${cells.map((cell) => `<td class=\"rt-TableCell\">${cell}</td>`).join('')}</tr>`;
+  }
+
+  fetch('/api/admin', { credentials: 'same-origin' })
+    .then((response) => {
+      if (response.status === 403) {
+        window.location.href = '/';
+        return null;
+      }
+      if (!response.ok) {
+        throw new Error('Failed loading admin data');
+      }
+      return response.json();
+    })
+    .then((data) => {
+      if (!data) return;
+
+      if (totalUsers) totalUsers.textContent = String(data.users?.length ?? 0);
+      if (totalClients) totalClients.textContent = String(data.clients?.length ?? 0);
+
+      if (usersBody) {
+        if (!data.users?.length) {
+          usersBody.innerHTML = row(['-', 'No users found', '-', '-']);
+        } else {
+          usersBody.innerHTML = data.users
+            .map((user: any) => row([
+              user.id,
+              user.username,
+              user.email || '-',
+              user.role === 'admin' ? '<span class="rt-Badge rt-r-size-1 rt-variant-solid rt-high-contrast" data-accent-color="lime">admin</span>' : user.role,
+            ]))
+            .join('');
+        }
+      }
+
+      if (clientsBody) {
+        if (!data.clients?.length) {
+          clientsBody.innerHTML = row(['-', 'No clients found', '-']);
+        } else {
+          clientsBody.innerHTML = data.clients
+            .map((client: any) => row([client.id, client.client_id, client.user_id]))
+            .join('');
+        }
+      }
+    })
+    .catch(() => {
+      if (usersBody) usersBody.innerHTML = row(['-', 'Failed to load data', '-', '-']);
+      if (clientsBody) clientsBody.innerHTML = row(['-', 'Failed to load data', '-']);
+      if (totalUsers) totalUsers.textContent = '0';
+      if (totalClients) totalClients.textContent = '0';
+    });
+</script>

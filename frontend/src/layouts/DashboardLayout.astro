@@ -1,0 +1,44 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Header from '../components/dashboard/Header';
+import NavVertical from '../components/dashboard/NavVertical';
+
+interface Props {
+  title?: string;
+  heading: string;
+  subheading?: string;
+}
+
+const { title, heading, subheading } = Astro.props;
+const activePath = Astro.url.pathname;
+---
+
+<BaseLayout title={title}>
+  <div class="mx-auto flex flex-col space-y-6 max-w-7xl px-4">
+    <Header client:load />
+    <div id="content" class="grid gap-12 md:grid-cols-[210px_1fr]">
+      <aside class="hidden w-[200px] flex-col md:flex">
+        <NavVertical activePath={activePath} client:load />
+      </aside>
+      <main class="flex w-full flex-1 flex-col overflow-hidden">
+        <div class="mb-8">
+          <h1 class="text-3xl font-bold tracking-tight text-slate-900">{heading}</h1>
+          {subheading && <p class="text-lg text-slate-600">{subheading}</p>}
+        </div>
+        <slot />
+      </main>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  const adminLink = document.getElementById('admin-nav-link');
+  fetch('/api/me', { credentials: 'same-origin' })
+    .then((response) => (response.ok ? response.json() : null))
+    .then((me) => {
+      if (me?.role === 'admin' && adminLink) {
+        adminLink.style.display = 'flex';
+      }
+    })
+    .catch(() => {});
+</script>

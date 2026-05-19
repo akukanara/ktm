@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from config import Config
+import os
 import threading
 import time
 from .frps import start_frps, generate_frps_ini
@@ -30,6 +31,8 @@ def create_app():
         generate_frps_ini(app.config)
         start_frps()
 
-    threading.Thread(target=frps_background, daemon=True).start()
+    disable_frps = os.getenv("KTM_DISABLE_FRPS_START", "false").lower() == "true"
+    if not disable_frps:
+        threading.Thread(target=frps_background, daemon=True).start()
 
     return app

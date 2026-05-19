@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ktm-db-dev
+    environment:
+      POSTGRES_DB: ktm
+      POSTGRES_USER: kanara
+      POSTGRES_PASSWORD: akanunara
+    ports:
+      - "5432:5432"
+    volumes:
+      - ktm-db-dev-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kanara -d ktm"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ktm-app-dev
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://kanara:akanunara@db:5432/ktm
+      SECRET_KEY: dev-secret-key
+      BASE_URL: http://localhost:5000
+      FRPS_BIND_ADDR: 0.0.0.0
+      FRPS_BIND_PORT: 7000
+      FRPS_GLOBAL_TOKEN: dev-frp-token
+    ports:
+      - "${APP_HOST_PORT:-5000}:5000"
+      - "${FRPS_HOST_PORT:-7000}:7000"
+    volumes:
+      - ./app:/app/app
+      - ./config.py:/app/config.py
+      - ./ktm.py:/app/ktm.py
+      - ./data:/app/data
+      - ./bin:/app/bin
+      - ./frontend/dist:/app/frontend/dist
+    command: python ktm.py
+
+volumes:
+  ktm-db-dev-data:
