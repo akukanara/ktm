@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Text, Badge, Grid, Flex, Box, Button, Dialog, TextField, Switch, Theme } from '@radix-ui/themes';
+import { Card, Text, Badge, Grid, Flex, Box, Button, Dialog, TextField, Switch, Theme, Select } from '@radix-ui/themes';
 import { IconPlus, IconSettings, IconTrash, IconPlugConnected, IconWind, IconDeviceFloppy } from '@tabler/icons-react';
 
 interface Proxy {
@@ -111,14 +111,29 @@ export default function ClientTunnelManager({ clientId }: { clientId: string }) 
               </Dialog.Description>
               
               <Flex direction="column" gap="3">
-                <label>
-                  <Text as="div" size="2" mb="1" weight="bold">Name</Text>
-                  <TextField.Root 
-                    value={newProxy.name} 
-                    onChange={e => setNewProxy({...newProxy, name: e.target.value})}
-                    placeholder="e.g. web-app" 
-                  />
-                </label>
+                <Flex gap="3">
+                  <label className="flex-[2]">
+                    <Text as="div" size="2" mb="1" weight="bold">Name</Text>
+                    <TextField.Root 
+                      value={newProxy.name} 
+                      onChange={e => setNewProxy({...newProxy, name: e.target.value})}
+                      placeholder="e.g. web-app" 
+                    />
+                  </label>
+                  <label className="flex-1">
+                    <Text as="div" size="2" mb="1" weight="bold">Protocol</Text>
+                    <Select.Root 
+                      value={newProxy.type} 
+                      onValueChange={val => setNewProxy({...newProxy, type: val})}
+                    >
+                      <Select.Trigger className="w-full" />
+                      <Select.Content>
+                        <Select.Item value="tcp">TCP</Select.Item>
+                        <Select.Item value="udp">UDP</Select.Item>
+                      </Select.Content>
+                    </Select.Root>
+                  </label>
+                </Flex>
                 <Flex gap="3">
                   <label className="flex-1">
                     <Text as="div" size="2" mb="1" weight="bold">Local Port</Text>
