@@ -292,7 +292,7 @@ def serve_config_json(client_id, token):
     return jsonify(cfg)
 
 
-@main.route("/clients/<client_id>/tunnels", methods=["GET", "POST"])
+@main.route("/api/clients/<client_id>/tunnels", methods=["GET", "POST"])
 @login_required
 def manage_tunnels(client_id):
     client = Client.query.filter_by(client_id=client_id).first_or_404()

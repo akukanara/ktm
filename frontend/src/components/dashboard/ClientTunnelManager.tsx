@@ -29,7 +29,7 @@ export default function ClientTunnelManager({ clientId }: { clientId: string }) 
   });
 
   useEffect(() => {
-    fetch(`/clients/${clientId}/tunnels`)
+    fetch(`/api/clients/${clientId}/tunnels`)
       .then(res => res.json())
       .then(d => {
         setData(d);
@@ -39,7 +39,7 @@ export default function ClientTunnelManager({ clientId }: { clientId: string }) 
   }, [clientId]);
 
   const handleSave = (proxies: Proxy[]) => {
-    fetch(`/clients/${clientId}/tunnels`, {
+    fetch(`/api/clients/${clientId}/tunnels`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ proxies })
