@@ -441,6 +441,31 @@ def verify_email_success():
     return redirect(url_for("main.profile"))
 
 
+@main.route("/api/tunnels")
+@login_required
+def tunnels_data():
+    if current_user.role == "admin":
+        all_clients = Client.query.all()
+    else:
+        all_clients = Client.query.filter_by(user_id=current_user.id).all()
+
+    all_tunnels = []
+    for c in all_clients:
+        if c.frpc_config:
+            for proxy in c.frpc_config:
+                all_tunnels.append({
+                    "client_id": c.client_id,
+                    "name": proxy.get("name"),
+                    "type": proxy.get("type"),
+                    "local_ip": proxy.get("localIP"),
+                    "local_port": proxy.get("localPort"),
+                    "remote_port": proxy.get("remotePort"),
+                    "enabled": proxy.get("enabled"),
+                })
+
+    return jsonify({"tunnels": all_tunnels})
+
+
 @main.route("/_astro/<path:filename>")
 def astro_assets(filename):
     assets_dir = os.path.join(_frontend_dist_dir(), "_astro")

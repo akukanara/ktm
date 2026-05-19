@@ -6,6 +6,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-ktm}
       POSTGRES_USER: ${POSTGRES_USER:-kanara}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+    ports:
+      - "127.0.0.1:${DB_HOST_PORT:-5432}:5432"
     volumes:
       - ktm-db-data:/var/lib/postgresql/data
     healthcheck:
@@ -23,12 +25,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    network_mode: host
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-kanara}:${POSTGRES_PASSWORD:-change-me}@db:5432/${POSTGRES_DB:-ktm}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-kanara}:${POSTGRES_PASSWORD:-change-me}@127.0.0.1:${DB_HOST_PORT:-5432}/${POSTGRES_DB:-ktm}
       SECRET_KEY: ${SECRET_KEY:-change-this-secret}
       BASE_URL: ${BASE_URL:-http://localhost:5000}
       FRPS_BIND_ADDR: 0.0.0.0
-      FRPS_BIND_PORT: ${FRPS_BIND_PORT:-7000}
+      FRPS_BIND_PORT: ${FRPS_HOST_PORT:-7000}
       FRPS_GLOBAL_TOKEN: ${FRPS_GLOBAL_TOKEN:-change-this-frp-token}
       ENABLE_EMAIL_VERIFICATION: ${ENABLE_EMAIL_VERIFICATION:-true}
       USE_S3_UPLOAD: ${USE_S3_UPLOAD:-false}
@@ -42,9 +45,6 @@ services:
       S3_REGION: ${S3_REGION:-ap-southeast-1}
       S3_KEY: ${S3_KEY:-}
       S3_SECRET: ${S3_SECRET:-}
-    ports:
-      - "${APP_HOST_PORT:-5000}:5000"
-      - "${FRPS_HOST_PORT:-7000}:7000"
     restart: unless-stopped
 
 volumes:

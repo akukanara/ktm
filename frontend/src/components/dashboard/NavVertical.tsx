@@ -2,7 +2,8 @@ import {
   IconHome2,
   IconUsers,
   IconUser,
-  IconLock
+  IconLock,
+  IconWind
 } from "@tabler/icons-react";
 
 interface NavVerticalProps {
@@ -18,6 +19,7 @@ const NavVertical = ({ activePath }: NavVerticalProps) => {
   const navItems = [
     { label: "Dashboard", href: "/", icon: IconHome2 },
     { label: "Clients", href: "/clients", icon: IconUsers },
+    { label: "Tunnels", href: "/tunnels", icon: IconWind },
     { label: "Admin", href: "/admin", icon: IconLock, adminOnly: true },
     { label: "Profile", href: "/profile", icon: IconUser },
   ];

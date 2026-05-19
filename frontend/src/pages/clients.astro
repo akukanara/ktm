@@ -1,68 +1,26 @@
 ---
-import { Theme, Card, Table, TextField, Button } from '@radix-ui/themes';
+import { Theme, Card, TextField, Button } from '@radix-ui/themes';
 import DashboardLayout from '../layouts/DashboardLayout.astro';
+import ClientCards from '../components/dashboard/ClientCards';
 ---
 
 <DashboardLayout title="Clients | KTM" heading="Clients" subheading="Create clients, copy installers, and manage tunnel ownership from one table.">
   <Theme accentColor="lime" grayColor="sand" radius="large" scaling="100%">
-    <Card className="mb-6 border border-lime-100 p-4 shadow-soft">
+    <Card className="mb-8 border border-lime-100 p-4 shadow-soft">
       <form method="POST" action="/clients" class="grid gap-3 md:grid-cols-[1fr_auto]">
-        <TextField.Root name="client_id" placeholder="client-name" required />
-        <Button type="submit">Add Client</Button>
+        <TextField.Root name="client_id" placeholder="Enter new client name (e.g. edge-server-01)" required className="h-10" />
+        <Button type="submit" size="3">Add New Client</Button>
       </form>
     </Card>
 
-    <Card className="overflow-hidden border border-lime-100 p-0 shadow-soft">
-      <Table.Root variant="surface">
-        <Table.Header>
-          <Table.Row>
-            <Table.ColumnHeaderCell>Client ID</Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell>Owner</Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell>Tunnels</Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell>Token</Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell>Installer</Table.ColumnHeaderCell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body id="clients-table-body">
-          <Table.Row>
-            <Table.Cell colSpan={5}>Loading...</Table.Cell>
-          </Table.Row>
-        </Table.Body>
-      </Table.Root>
-    </Card>
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="text-xl font-semibold text-slate-800">Your Connected Clients</h2>
+    </div>
+
+    <ClientCards client:load />
   </Theme>
 </DashboardLayout>
 
 <script>
-  const body = document.getElementById('clients-table-body');
-
-  function tableRow(cells: any[]) {
-    return `<tr>${cells.map((cell) => `<td class=\"rt-TableCell\">${cell}</td>`).join('')}</tr>`;
-  }
-
-  fetch('/api/clients', { credentials: 'same-origin' })
-    .then((response) => {
-      if (!response.ok) throw new Error('Failed to load clients');
-      return response.json();
-    })
-    .then((data) => {
-      if (!body) return;
-      if (!data.clients?.length) {
-        body.innerHTML = tableRow(['No clients', '-', '0', '-', '-']);
-        return;
-      }
-
-      body.innerHTML = data.clients
-        .map((client: any) => tableRow([
-          client.client_id,
-          client.owner || '-',
-          client.tunnels ?? 0,
-          `<code class=\"text-xs\">${client.token}</code>`,
-          `<code class=\"text-xs break-all\">${client.installer}</code>`,
-        ]))
-        .join('');
-    })
-    .catch(() => {
-      if (body) body.innerHTML = tableRow(['Failed to load data', '-', '-', '-', '-']);
-    });
+  // Script removed as logic moved to React component
 </script>
